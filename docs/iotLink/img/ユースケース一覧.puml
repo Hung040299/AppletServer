@@ -1,0 +1,101 @@
+@startuml ユースケース一覧
+!include style.conf
+left to right direction
+''skinparam linetype polyline
+
+skinparam usecase {
+  BackgroundColor<< Usecase >> #ffffbb
+  BackgroundColor<< 機能 >> #ffbbff
+}
+
+actor "User" as User
+actor "Vendor管理者" as Vendor
+
+rectangle "RiiiverPlayer/VendorApp" as PlayerApp {
+  (起動)                      as Player_Start
+  (ストア表示機能)            as Player_Store << 機能 >>
+  (NotificationToken取得機能) as Player_Token << 機能 >>
+  (iiideaアクティベート機能)  as Player_Activate << 機能 >>
+  (piece実行結果の受信機能)   as Player_Receive << 機能 >>
+  (Push受信機能)              as Player_Push_receive << 機能 >>
+}
+
+rectangle RiiiverApp {
+  (IoT-iiidea作成機能) as Riiiver_iiidea << 機能 >>
+}
+
+rectangle SDK {
+  (NotificationToken送信機能)        as Sdk_PushToken << 機能 >>
+  (承認リクエストダイアログ表示機能) as Sdk_Dialog << 機能 >>
+  (Preference済みiiidea取得機能)     as Sdk_iiidea << 機能 >>
+  (pieceごとのアクティベート機能)    as Sdk_Activate << 機能 >>
+  (piece実行結果送信機能)            as Sdk_Execute_send << 機能 >>
+  (実行再開機能)                     as Sdk_Execute_resume << 機能 >>
+}
+
+rectangle "配信管理サーバ" {
+  (NotificationToken保存機能) as Push_token << 機能 >>
+  (承認用Push通知の送信機能)  as Push_Push << 機能 >>
+  (piece実行結果の連携機能)   as Push_Execute << 機能 >>
+  (証明書の保存機能)          as Push_Cert_save << 機能 >>
+  (証明書の読み出し機能)      as Push_Cert_load << 機能 >>
+
+  Push_Cert_load -> Push_Execute
+}
+
+rectangle "Storeサーバ" {
+  (連携リクエストを送信する機能) as Store_Request
+}
+
+(Push用トークンの取得をする)              as Usecase_Token << Usecase >>
+(IoT機器連携用のiiideaを作成する)         as Usecase_iiidea << Usecase >>
+(Preference設定を使用する)                as Usecase_Preference << Usecase >>
+(連携用Pushを受信する)                    as Usecase_Push << Usecase >>
+(iiideaをアクティベートする)              as Usecase_Activate << Usecase >>
+(iiideaを連携実行する)                    as Usecase_execute << Usecase >>
+(実行を再開する)                          as Usecase_Resume << Usecase >>
+(Push用の証明書を登録する)                as Usecase_Cert_register << Usecase >>
+
+'''''
+User --> Usecase_Token
+Usecase_Token ..> Player_Token
+Usecase_Token ..> Sdk_PushToken
+Usecase_Token ..> Push_token
+
+'''''
+User --> Usecase_iiidea
+Usecase_iiidea ..> Riiiver_iiidea
+
+'''''
+User <-- Usecase_Push
+
+Usecase_Push ..> Player_Push_receive
+Usecase_Push ..> Sdk_Dialog
+Usecase_Push ..> Player_Store
+
+'''''
+Player_Start .> Usecase_Activate
+Usecase_Activate ..> Sdk_iiidea
+Usecase_Activate ..> Player_Activate
+Usecase_Activate ..> Sdk_Activate
+
+'''''
+User --> Usecase_execute
+Usecase_execute ..> Sdk_Execute_send
+Usecase_execute ..> Push_Execute
+Usecase_execute ..> Sdk_Execute_resume
+Usecase_execute ..> Player_Receive
+
+'''''
+Usecase_Resume ..> Player_Receive
+Usecase_Resume ..> Sdk_Execute_resume
+
+'''''
+Vendor --> Usecase_Cert_register
+Usecase_Cert_register ..> Push_Cert_save
+
+'''
+Usecase_Preference ..> Store_Request
+Store_Request --> Push_Push
+
+@enduml

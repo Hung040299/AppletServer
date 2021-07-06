@@ -1,0 +1,23 @@
+@startuml Iot
+scale 1.5
+entity "certificate" as cert {
+    + id: text [PK]
+    ==
+    data.vendorId: text
+    data.type: text
+    data.cert: text
+    data.pass: text
+    data.expire: number
+}
+
+entity "notificationToken" as token {
+         +_id: text  [PK]
+        ---
+       owner: text
+       type: text
+       #data.vendorId: text [FK]
+       data.notificationToken: text
+}
+
+cert --o{ token
+@enduml

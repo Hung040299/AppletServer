@@ -1,0 +1,18 @@
+@startuml
+!include style.conf
+
+participant "SDK" as Sdk
+participant "配信管理サーバ" as PushServer
+database "private_key" as KeyTable
+
+Sdk -> PushServer: POST /push/privateKey
+PushServer -> PushServer: アクセストークンを取得
+alt "AccessToken取得失敗"
+  Sdk <-- PushServer: 400 Bad Request
+else "AccessToken取得成功"
+  PushServer -> PushServer: 秘密鍵暗号化&Base64エンコード
+  PushServer -> KeyTable: - appId\n- vendorId\n- firebaseProjectId\n- firebasePrivateKey\nprivate_keyテーブルに保存
+  Sdk <-- PushServer: 201 O.K.
+end
+
+@enduml

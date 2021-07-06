@@ -1,0 +1,44 @@
+@startuml send_sequence
+scale 1.5
+title Notification送信 (POST /push/send)
+
+participant "User" as user
+participant "AppletServer" as server
+participant "Dodai" as dodai
+participant "APNs" as apns
+participant "FCM" as fcm
+
+user -> server: POST /push/send
+server -> dodai: vendorIdとownerとtype情報からnotificationToken取得要求
+dodai --> server: notificationToken
+alt notificationToken なし
+server -> user: 400 Bad Request
+else notificationToken あり
+server -> dodai: certificateコレクションに該当vendorIdとtypeの証明書要求
+dodai --> server: レスポンス
+server -> server: 証明書の存在確認
+alt 証明書なし
+server --> user: 400 Bad Request
+else 証明書あり
+alt apns の場合
+server -> server: 証明書の期限確認
+alt 証明書が期限切れ
+server--> user: 400 Bad Request
+else 証明書が期限内
+server -> apns: プッシュ通知送信依頼
+apns --> server: レスポンス
+server --> user: レスポンス
+end
+else fcm の場合
+server -> server: アクセストークンの取得
+alt 取得失敗
+server -> user: 400 Bad Request
+else 取得成功
+server -> fcm: プッシュ通知送信依頼
+fcm --> server: レスポンス
+server --> user: レスポンス
+end
+end
+end
+end
+@enduml

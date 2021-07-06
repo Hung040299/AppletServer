@@ -1,0 +1,69 @@
+{
+  "description": {
+    "ja": "Post sample Applet" 
+  },
+  "wirings": {
+  },
+  "actionTool": "localNotification",
+  "deviceId": "none",
+  "preferences": {
+    "serviceProxy-5d01f7fe468c00087b7136c4": {
+      "radius": 10000
+    },
+    "localNotification-5d01f78a468c00087b7136c1": {
+      "format": "$integer1$"
+    },
+    "virtualButton-5d0215d9468c00087b7136cd": {
+      "title": "ボタン"
+    }
+  },
+  "toolIds": [],
+  "triggerTool": "virtualButton",
+  "categoryIds": [
+    "cat_0017",
+    "cat_0013"
+  ],
+  "action": "localNotification-5d01f78a468c00087b7136c1",
+  "iconUrl": "https://d2i17waipmeu54.cloudfront.net/4/QknrkGVJ/h6hfcK3x/blockIcon/5caac64824000024007fe9bd_luxture-5d020248468c00087b7136ca_PFrkoHVG",
+  "serviceTool": "serviceProxy",
+  "trigger": "virtualButton-5d0215d9468c00087b7136cd",
+  "service": "serviceProxy-5d01f7fe468c00087b7136c4",
+  "vendorId": "CITIZEN",
+  "title": {
+    "ja": "Post samplet Applet" 
+  },
+  "version": "1.0.0",
+  "public": true,
+  "osType": "none",
+  "actionDeviceId": "actionDeviceId1 Example",
+  "serviceDeviceId": "serviceDeviceId1 Example",
+  "triggerDeviceId": "triggerDeviceId 1Example",
+  "actionVendorId": "actionVendorId1 Example",
+  "serviceVendorId": "serviceVendorId1 Example",
+  "triggerVendorId": "triggerVendorId1 Example",
+  "sdkVersion": "1.0.1",
+  "personalInfoList": [{
+    "serviceCompanyName": "Google Inc.",
+    "privacyPolicy": {
+          "label": {
+            "en": "Link to the privacy policy",
+            "ja": "プライバシーポリシーはこちら" 
+          },
+          "url": {
+            "en": "https://example.com/privacy",
+            "ja": "https://example.com/ja/privacy" 
+          }
+    },
+    "description": {
+          "en": "The purpose and purpose provided to this service provider. Disclaimer if there is no privacy policy URL here..",
+          "ja": "このサービスプロバイダに提供している目的・趣旨。プライバシーポリシーのURLがない場合の免責事項などをここに" 
+    },
+    "typeList": [{
+            "type": "demographic",
+            "description": {
+              "en": "The description why this piece uses demographic information here...",
+              "ja": "demographicをこのPieceで利用している目的、概要など" 
+            }
+    }]
+  }]
+}

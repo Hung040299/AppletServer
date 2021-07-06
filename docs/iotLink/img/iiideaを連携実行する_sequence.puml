@@ -1,0 +1,51 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+
+participant "RiiiverPlayer/VendorApp" as PlayerApp
+participant "SDK" as Sdk
+participant "配信管理サーバ" as PushServer
+database "Token管理Table" as TokenTable
+database "証明書Table" as CertTable
+participant "ユーザ管理サーバ" as UserServer
+participant "APNs/FCM" as Apns
+
+UserA               -> PlayerApp                  ++: Triggerを発火する
+PlayerApp           -> Sdk                        ++: Trigger pieceを実行する
+Sdk                 -> Sdk                          : Service pieceを実行する
+group "[SDK] piece実行結果送信機能"
+  Sdk               -> Sdk                          : IoT機器連携かどうかを判定する
+  Sdk               -> PushServer                 ++: POST /push/send
+  note right Sdk
+   iiideaId, S pieceのoutput, A pieacのvendorIdを送信する
+  end note
+
+  deactivate Sdk
+end
+group "[配信管理サーバ] piece実行結果の連携機能"
+  PushServer        -> UserServer                ++: iiideaの連携先取得API
+  note right PushServer
+    クエリ：送信元userId, iiideaId
+  end note
+  PushServer       <-- UserServer                --: 連携先UserIdのリスト
+
+  PushServer        -> TokenTable                ++: 連携先のtokenのリストを取得する
+  PushServer       <-- TokenTable                --: tokenのリスト
+
+  group "[配信管理サーバ] 証明書の読み出し機能"
+    PushServer      -> CertTable                 ++: 連携先のPush証明書を取得する
+    PushServer     <-- CertTable                 --: Push証明書
+  end
+
+  PushServer        -> Apns                      ++: Push配信をする
+
+  deactivate PushServer
+end
+
+|||
+note over PlayerApp
+  実行を再開する ユースケースへ
+end note
+
+@enduml

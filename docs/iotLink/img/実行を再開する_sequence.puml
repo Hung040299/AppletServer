@@ -1,0 +1,35 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザB" as UserB
+
+participant "RiiiverPlayer/VendorApp" as PlayerApp
+participant "SDK" as Sdk
+participant "配信管理サーバ" as PushServer
+participant "APNs/FCM" as Apns
+
+note over PlayerApp
+  iiideaを連携実行する ユースケースからの続き。
+  ここからはユーザBのPlayerApp/VendorAppでの実行となる。
+end note
+
+group "[RiiiverPlayer/VendorApp] piece実行結果の受信機能"
+  PlayerApp         <- Apns                      ++: Pushを受信する
+  deactivate Apns
+
+  PlayerApp         -> Sdk                       ++: Push通知の情報を連携する\nERSDK.executeAppletForDeviceLink
+  deactivate PlayerApp
+end
+
+group "[SDK] 実行再開機能"
+  Sdk               -> Sdk                         : Push通知の情報を解析する
+  note right Sdk
+    次のpieceのoutputを取得する
+  end note
+  Sdk               -> Sdk                         : Action pieceを実行する
+  Sdk               -> PlayerApp                 ++: 結果を通知する
+end
+
+UserB              <-- PlayerApp                 --: 結果を表示する
+
+@enduml

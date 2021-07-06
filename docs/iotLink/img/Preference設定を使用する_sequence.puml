@@ -1,0 +1,25 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+participant "RiiiverStore" as StoreServer
+participant "配信管理サーバ" as PushServer
+database "Token管理Table" as TokenTable
+database "証明書Table" as CertTable
+participant "FCM" as Fcm
+
+UserA -> StoreServer :連携先ユーザ選択
+
+StoreServer -> PushServer ++:POST /push/send
+group "[配信管理サーバ]承認用Push通知の送信機能"
+PushServer -> TokenTable ++:連携先のtokenのリストを取得する
+TokenTable --> PushServer --:tokenのリスト
+group "[配信管理サーバ]証明書の読み出し機能"
+PushServer -> CertTable ++:連携先のPush証明書を取得する
+CertTable --> PushServer --:Push証明書
+end
+PushServer -> Fcm ++:Push配信をする
+deactivate PushServer
+end
+
+@enduml

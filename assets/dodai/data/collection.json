@@ -1,0 +1,124 @@
+[
+  {
+    "type": "data",
+    "name": "all_log_data",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "applet",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "appletgoodnum",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "appletmisc",
+    "readPermission": 10,
+    "writePermission": 10
+  },
+  {
+    "type": "data",
+    "name": "appletpublicstatus",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "appletstorestatus",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "applettemplate",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "applicationAPIAuth",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "block",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "blockLambdaLog",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "blockLambdaStatus",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "blockStoreStatus",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "clientAPIAuth",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "firmware",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "data",
+    "name": "name",
+    "readPermission": 1,
+    "writePermission": 1
+  },
+  {
+    "type": "file",
+    "name": "appletIcon",
+    "readPermission": 1,
+    "writePermission": 1,
+    "volumeUsageCounted": true,
+    "maxVersions": 1
+  },
+  {
+    "type": "file",
+    "name": "blockIcon",
+    "readPermission": 1,
+    "writePermission": 1,
+    "volumeUsageCounted": true,
+    "maxVersions": 1
+  },
+  {
+    "type": "file",
+    "name": "blockIllust",
+    "readPermission": 1,
+    "writePermission": 1,
+    "volumeUsageCounted": true,
+    "maxVersions": 1
+  },
+  {
+    "type": "file",
+    "name": "blockLambda",
+    "readPermission": 1,
+    "writePermission": 1,
+    "volumeUsageCounted": true,
+    "maxVersions": 1
+  }
+]

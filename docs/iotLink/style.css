@@ -1,0 +1,14 @@
+#main h1 {
+  color: #0f4e80;
+  border-bottom: solid 2px #4dabf5;
+  border-left: solid 16px #4dabf5;
+  padding-left: 4px;
+}
+
+#main h2 {
+  color: #0f4e80;
+}
+
+#main h3 {
+  color: #0f4e80;
+}

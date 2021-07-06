@@ -1,0 +1,44 @@
+@startuml
+!include style.conf
+
+!define FirebasePuml https://raw.githubusercontent.com/k2wanko/firebase-icons-plantuml/master/plantuml
+!includeurl FirebasePuml/FirebaseCommon.puml
+!includeurl FirebasePuml/FirebaseAll.puml
+
+left to right direction
+
+actor Vendor管理者 as Vendor
+actor ユーザA as UserA
+actor ユーザB as UserB
+rectangle VendorApp
+rectangle PlayerApp
+
+cloud "Riiiverクラウド" {
+  cloud "AWS" {
+    database MySQL
+  }
+
+  interface "配信管理サーバ API" as PushApi
+  interface "Appletサーバ API" as AppletApi
+  cloud "AWSインスタンス" {
+    [Appletサーバ] as AppletServer
+    AppletApi -- AppletServer
+    PushApi   -- AppletServer
+  }
+
+  AppletServer - MySQL
+}
+
+Messaging(Firebase, "Firebase", "Push messaging")
+
+Vendor         ..> PushApi
+VendorApp      ..> AppletApi
+VendorApp      ..> PushApi
+UserA          ..> VendorApp
+UserB          ..> PlayerApp
+PlayerApp      ..> AppletApi
+PlayerApp      ..> PushApi
+
+AppletServer  ---> Firebase
+
+@enduml

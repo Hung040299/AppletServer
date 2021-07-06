@@ -1,0 +1,49 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+participant "RiiiverPlayer/VendorApp" as PlayerApp
+participant "ERSDK" as Sdk
+participant "ERAuth" as ERAuth
+participant "iOS/Android OS" as Os
+participant "Firebase" as Apns
+
+note left Apns
+  配信管理サーバの「Preference設定を使用する」シーケンスの
+  「承認用Push通知の送信機能」によりApns/FCMにPush通知が行われる
+end note
+
+Os        <- Apns             ++: Silent Push配信
+group "[PlayerApp] Push受信機能"
+  PlayerApp     <- Os         ++: FirebaseMessagingService.onMessageReceived(RemoteMessage)
+  PlayerApp     -> Sdk        ++: executeTaskForRemoteNotification(remoteMessage)
+  Sdk           -> Sdk          : remoteMessageを解析する
+  group "[SDK] 承認リクエストダイアログ表示機能"
+    Sdk         -> Sdk          : 通知の作成と\nBroadcastReceiverの登録
+    Sdk         -> Os         --: notificationManager.notify()
+    deactivate PlayerApp
+
+    UserA      <-  Os         ++: LocalNotificationを表示する
+    UserA       -> Os         --: LocalNotificationをタップする
+    Sdk        <-  Os         ++: BroadcastReceiver#onReceive()
+    PlayerApp  <- Sdk         ++: requestOpenDialog(request: Bundle) callback
+
+    PlayerApp   -> Sdk        ++: openDialog(context, request)
+    Sdk         -> Sdk          : requestからデータを取得する
+
+    UserA      <-  Sdk        --: 承認リクエストダイアログ表示
+    activate UserA
+    UserA       -> Sdk          : ストアを表示する 押下
+
+    group "[PlayerApp] ストア表示機能"
+      PlayerApp  <-  Sdk       --: requestOpenPreference() callback
+      PlayerApp  ->  PlayerApp   : WebView画面を表示する
+      PlayerApp  ->  ERAuth    ++: ERAuth.openPreference(webview)
+      UserA      <-  ERAuth    --: ストアをWebViewで表示する
+    end
+  end
+
+deactivate UserA
+end
+
+@enduml

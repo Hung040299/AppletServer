@@ -1,0 +1,39 @@
+{
+  "description": {
+    "ja": "Post sample Applet"
+  },
+  "wirings": {
+  },
+  "actionTool": "localNotification",
+  "deviceId": "none",
+  "preferences": {
+    "serviceProxy-5d01f7fe468c00087b7136c4": {
+      "radius": 10000
+    },
+    "localNotification-5d01f78a468c00087b7136c1": {
+      "format": "$integer1$"
+    },
+    "virtualButton-5d0215d9468c00087b7136cd": {
+      "title": "ボタン"
+    }
+  },
+  "toolIds": [],
+  "triggerTool": "virtualButton",
+  "categoryIds": [
+    "cat_0017",
+    "cat_0013" 
+  ],
+  "action": "localNotification-5d01f78a468c00087b7136c1",
+  "iconUrl": "https://d2i17waipmeu54.cloudfront.net/4/QknrkGVJ/h6hfcK3x/blockIcon/5caac64824000024007fe9bd_luxture-5d020248468c00087b7136ca_PFrkoHVG",
+  "serviceTool": "serviceProxy",
+  "trigger": "virtualButton-5d0215d9468c00087b7136cd",
+  "service": "serviceProxy-5d01f7fe468c00087b7136c4",
+  "vendorId": "CITIZEN",
+  "title": {
+    "ja": "Post samplet Applet" 
+  },
+  "version": "1.0.0",
+  "public": true,
+  "osType": "none",
+  "sdkVersion": "1.0.1"
+}

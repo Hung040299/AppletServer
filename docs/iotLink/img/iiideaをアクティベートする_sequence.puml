@@ -1,0 +1,54 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+participant "RiiiverPlayer/VendorApp" as PlayerApp
+box "SDK" #LightSteelBlue
+  participant "ERSDK" as Sdk
+  participant "ERApplet" as ERApplet
+end box
+participant "iOS/Android OS" as Os
+participant "ユーザ管理サーバ" as UserServer
+participant "Appletサーバ" as AppletServer
+
+PlayerApp       -> PlayerApp          ++: iiideaを取得する
+
+group "[RiiiverPlayer] iiideaアクティベート機能"
+  PlayerApp       -> Sdk              ++: ダウンロード済みiiideaの一覧取得API
+  PlayerApp      <-- Sdk              --: iiideaの一覧
+
+  group "[SDK] Preference済みiiidea取得機能"
+    PlayerApp       -> Sdk            ++: getApplet(appletId)
+    Sdk             -> AppletServer   ++: iiidea取得API
+    Sdk            <-- AppletServer   --: iiidea
+
+    Sdk            ->o ERApplet       ++: << Create >>
+    Sdk            <-- ERApplet       --: ERAppletインタンス
+
+    |||
+    Sdk             -> UserServer     ++: Preference取得API
+    Sdk            <-- UserServer     --: Preference
+
+    note left ERApplet
+      レスポンスの
+        - trigger_preference
+        - service_preference
+        - action_preference
+      をそれぞれERAppletに設定する
+    end note
+
+    Sdk             -> ERApplet       ++: setTriggerBlockUserPref(pref)
+    Sdk             -> ERApplet         : setServiceBlockUserPref(pref)
+    Sdk             -> ERApplet         : setActionBlockUserPref(pref)
+    deactivate ERApplet
+
+    PlayerApp      <-- Sdk            --: completion(ERApplet)
+  end
+
+  group "[SDK] pieceごとのアクティベート機能"
+    PlayerApp       -> ERApplet       ++: activate
+    PlayerApp      <-- ERApplet       --: 成功
+  end
+end
+
+@enduml

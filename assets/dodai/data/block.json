@@ -1,0 +1,209 @@
+[
+  {
+    "_id": "virtualButton-5d0215d9468c00087b7136cd",
+    "owner": "5c987fe226000026000fd613",
+    "sections": [],
+    "createdAt": "2019-03-27T07:55:52+00:00",
+    "updatedAt": "2019-03-27T07:55:52+00:00",
+    "version": 0,
+    "data": {
+      "title": {
+        "ja": "バーチャルボタン",
+        "en": "Virtual Button"
+      },
+      "version": "0.0.1",
+      "sdkVersion": "0.0.1",
+      "vendorId": "none",
+      "deviceId": "phone",
+      "iconUrl": "",
+      "description": {
+        "ja": "ボタンでアプレット起動します。",
+        "en": "Trigger applet by UI button"
+      },
+      "blockType": "trigger",
+      "executor": "RBCVirtualButtonTriggerExecutor",
+      "preferences": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "x-title": {
+              "ja": "ボタンの名前",
+              "en": "Name of button"
+            },
+            "x-description": {
+              "ja": "ボタンにつける名前を設定してください",
+              "en": "Set a name for the button"
+            },
+            "default": "ボタン"
+          }
+        }
+      },
+      "categoryIds": [
+        "cat_3002"
+      ],
+      "toolId": "virtualButton"
+    }
+  },
+  {
+    "_id": "serviceProxy-5d01f7fe468c00087b7136c4",
+    "owner": "5c98764424000024007e86a9",
+    "sections": [],
+    "createdAt": "2019-03-28T01:42:38+00:00",
+    "updatedAt": "2019-03-29T02:42:19+00:00",
+    "version": 3,
+    "data": {
+      "title": {
+        "ja": "スタバを探す",
+        "en": "Find nearby Starbucks"
+      },
+      "version": "0.0.1",
+      "sdkVersion": "0.0.1",
+      "vendorId": "none",
+      "deviceId": "none",
+      "description": {
+        "ja": "近くのスタバを探します",
+        "en": "Find nearby Starbucks."
+      },
+      "blockType": "service",
+      "executor": "RBCCommonWebServiceExecutor",
+      "serviceProxy": {
+        "service": "nearStarbucks",
+        "parameters": [
+          "location"
+        ]
+      },
+      "preferences": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "number",
+            "x-title": {
+              "ja": "探す範囲の半径",
+              "en": "radius"
+            },
+            "x-description": {
+              "ja": "スタバを探したい範囲の半径(m)。0は指定なし。",
+              "en": "radius of search Starbucks. unit is meter. if set 0, unlimited."
+            },
+            "default": 10000
+          }
+        },
+        "required": [
+          "radius"
+        ]
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "integer",
+            "x-title": {
+              "ja": "方角（北を基準にして何時の方向か）"
+            }
+          }
+        }
+      },
+      "categoryIds": [
+        "cat_0003",
+        "cat_0008"
+      ],
+      "toolId": "serviceProxy",
+      "iconUrl": "https://d2i17waipmeu54.cloudfront.net/0/QknrkGVJ/h6hfcK3x/blockIcon/5c98764424000024007e86a9_serviceProxy-5c9c268e60d47d16f9cdabeb_NMEI4V31",
+      "permissionList": {
+        "ios": [
+          "location"
+        ],
+        "android": [
+          "location"
+        ]
+      }
+    }
+  },
+  {
+    "_id": "localNotification-5d01f78a468c00087b7136c1",
+    "owner": "5c9858cb24000025007e803b",
+    "sections": [],
+    "createdAt": "2019-03-25T07:36:26+00:00",
+    "updatedAt": "2019-03-25T07:36:28+00:00",
+    "version": 2,
+    "data": {
+      "title": {
+        "ja": "Local Notification",
+        "en": "Local Notification"
+      },
+      "version": "0.0.1",
+      "sdkVersion": "0.0.1",
+      "vendorId": "none",
+      "deviceId": "phone",
+      "iconUrl": "https://d2i17waipmeu54.cloudfront.net/7/QknrkGVJ/h6hfcK3x/blockIcon/5c9858cb24000025007e803b_localNotification-5c9884fa5222ca0e6384d250_1pdwPICH",
+      "description": {
+        "ja": "端末に通知メッセージを表示します\n入力はintegerです",
+        "en": "Show string with LocalNotification.\nThis block requires integer input."
+      },
+      "blockType": "action",
+      "executor": "RBCNotificationActionExecutor",
+      "preferences": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "x-format": "",
+            "x-title": {
+              "ja": "フォーマット",
+              "en": "format"
+            },
+            "x-description": {
+              "ja": "本文構成のフォーマット",
+              "en": "format of notification message"
+            },
+            "default": "$integer1$"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "input": {
+        "type": "object",
+        "x-title": {
+          "ja": "本文構成パラメータ",
+          "en": "input integer"
+        },
+        "x-description": {
+          "ja": "通知本文を構成するパラメータ一覧",
+          "en": "this integer will show in notification"
+        },
+        "properties": {
+          "integer1": {
+            "type": "integer",
+            "x-title": {
+              "ja": "数値1",
+              "en": "integer1"
+            }
+          }
+        }
+      },
+      "output": {
+        "body": {
+          "type": "string"
+        },
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "x-title": {
+              "ja": "結果",
+              "en": "result"
+            }
+          }
+        }
+      },
+      "categoryIds": [
+        "cat_1002"
+      ],
+      "toolId": "localNotification",
+      "illustUrl": "https://d2i17waipmeu54.cloudfront.net/8/QknrkGVJ/h6hfcK3x/blockIllust/5c9858cb24000025007e803b_localNotification-5c9884fa5222ca0e6384d250_RFh39HsZ"
+    }
+  }
+]

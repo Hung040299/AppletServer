@@ -1,0 +1,22 @@
+@startuml
+!include style.conf
+
+actor "Vendor管理者" as Vendor
+participant "Apple Developer Center" as Apns
+participant "Firebase Console" as Fcm
+participant "配信管理サーバ" as PushServer
+database "証明書Table" as CertTable
+
+group "APNs 認証キー設定"
+Vendor -> Apns ++:ダウンロードAPNs 認証キー
+Apns --> Vendor --:APNs 認証キー
+Vendor -> Fcm :アップロードAPNs 認証キー
+end
+Vendor -> Fcm ++:ダウンロード秘密鍵ファイル
+Fcm --> Vendor --:秘密鍵ファイル
+Vendor -> PushServer :POST /push/cert
+group "[配信管理サーバ]Push用の証明書登録機能"
+PushServer -> CertTable ++:秘密鍵ファイルをDBに登録
+CertTable --> PushServer --:成功
+end
+@enduml

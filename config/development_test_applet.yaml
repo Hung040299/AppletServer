@@ -1,0 +1,120 @@
+app:
+  encryption_key: "LocalEncrypionKey"
+# user-session add configs
+  auth_type: "jwttoken"
+log4js:
+  appenders:
+    default:
+      type: "console"
+  categories:
+    default:
+      appenders: ["default"]
+      level: "debug"
+    system:
+      appenders: ["default"]
+      level: "debug"
+    access:
+      appenders: ["default"]
+      level: "debug"
+    error:
+      appenders: ["default"]
+      level: "debug"
+dodai:
+  app_id: "a_8NhDTAgF"
+  group_id: "g_Nkp73RmH"
+  app_key: "akey_eMndEGZtVr6Ypwg6Er"
+  root_key: "rkey_eywZBpLDQJVSLbp6kK"
+# user-session config START
+  schema: "https"
+  host: "st-dod.riiiver.com"
+  appId : "a_8NhDTAgF"
+  groupId: "g_Nkp73RmH"
+  rootkey: "rkey_eywZBpLDQJVSLbp6kK"
+  #applet:
+  #  url_add_free_applet: "http://localhost/applet/add_free_applet"
+  #  url_remove_free_applet: "http://localhost/applet/remove_free_applet"
+  #  url_nice_applet: "http://localhost/applet/nice_applet"
+  #  url_cancel_nice_applet: "http://localhost/applet/cancel_nice_applet"
+region: 
+  LIST: 
+    - name: 
+        ja: "アメリカ"
+        en: America
+      region: US
+    - name: 
+        ja: "ヨーロッパ"
+        en: Europe
+      region: US
+    - name: 
+        ja: "アフリカ"
+        en: Africa
+      region: US
+    - name: 
+        ja: "アジア"
+        en: Asia
+      region: JP
+    - name: 
+        ja: "オセアニア"
+        en: Oceania
+      region: JP
+    - name: 
+        ja: "その他"
+        en: Others
+      region: US
+  JP: 
+    cognito: cognito_jp
+    mysql: mysql_jp
+  US: 
+    cognito: cognito_us
+    mysql: mysql_us
+cognito_jp:
+  region: "ap-northeast-1"
+  userpool: "ap-northeast-1_t6Zej1QNO"
+  clientId: "60ni0chfotlve2lfju3u81kmqi"
+  AWSAccessKey: "AKIAIYJB7EC6DTXMNUPQ"
+  AWSSecretKey: "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"
+cognito_us:
+  region: "ap-northeast-1"
+  userpool: "ap-northeast-1_5ipdYEPmu"
+  clientId: "2n42cmv5ti4vufcfecdbe635cp"
+  AWSAccessKey: "AKIAIYJB7EC6DTXMNUPQ"
+  AWSSecretKey: "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"
+mysql_jp:
+  host: "localhost"
+  user: "root"
+  password: "14041998"
+  db: "riuser_jp"
+  limit: 20
+mysql_us:
+  host: "localhost"
+  user: "root"
+  password: "14041998"
+  db: "riuser_us"
+  limit: 20
+  #cognito:
+  #  region: "ap-northeast-1"
+  #  userpool: "ap-northeast-1_t6Zej1QNO"
+  #  clientId: "60ni0chfotlve2lfju3u81kmqi"
+  #  AWSAccessKey: "AKIAIYJB7EC6DTXMNUPQ"
+  #  AWSSecretKey: "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"
+google:
+  aud: [
+        "559411539788-gp138q93o68fdiklnu3dgmnmmjroafan.apps.googleusercontent.com",
+        "559411539788-id91omtt4ob5deq7131850r6jk88hvgm.apps.googleusercontent.com",
+        "559411539788-i8udibkfvpid90ivrou35bg952p06fo3.apps.googleusercontent.com"
+       ]
+Store:
+  url: "https://dv-str.riiiver.com/api/store/top/"
+  top: "https://dv-str.riiiver.com/store_top/"
+  logout: "https://dv-str.riiiver.com/login?redirect_uri=https%3A%2F%2Fdv-str.riiiver.com%2Fstore_top%2F&css=s"
+  resourceUrl: "https://dv-str.riiiver.com/static/img"
+  menuUrl: "https://dv-str.riiiver.com/store_menu/"
+  termsOfService: "https://dv-str.riiiver.com/store_tos/?erst_footer=0"
+  key: ""
+  cert: ""
+  keyid: "7u6imvbso5o61fup33qlvbfs0b"
+SessionCheck : api
+User:
+  host: "https://dv-str.riiiver.com"
+  HmacSecret: "1lf3oumldqtgbso5o61fup33ql"
+# user-session config END

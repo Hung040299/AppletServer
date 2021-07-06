@@ -1,0 +1,33 @@
+@startuml
+!include style.conf
+title /push/acceptance
+
+participant "RiiiverStore" as StoreServer
+participant "配信管理サーバ" as PushServer
+database "notification_token" as TokenTable
+database "private_key" as KeyTable
+participant "FCM" as Firebase
+
+StoreServer -> PushServer: /push/acceptance
+PushServer -> TokenTable: userIdとappId\nからnotificationTokenを取得
+alt "NotificationToken取得失敗"
+  StoreServer <-- PushServer: 400 Bad Request
+else "NotificationToken取得成功"
+  group "秘密鍵読み出し機能"
+    PushServer -> KeyTable: appIdから秘密鍵を取得
+    PushServer -> PushServer: 秘密鍵復号化&Base64デコード
+  end
+  alt "秘密鍵取得失敗"
+    StoreServer <-- PushServer: 400 Bad Request
+  else "秘密鍵取得成功"
+    PushServer -> PushServer: アクセストークン取得
+    alt "AccessToken取得失敗"
+      StoreServer <-- PushServer: 400 Bad Request
+    else "AccessToken取得成功"
+      PushServer -> PushServer: Push通知メッセージ生成（仕様未定）
+      PushServer -> Firebase: 承認用Push通知送信
+    end
+  end
+end
+
+@enduml

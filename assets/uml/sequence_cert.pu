@@ -1,0 +1,32 @@
+@startuml cert_sequence
+scale 1.5
+title 証明書保存 (POST /push/cert)
+
+participant "User" as user
+participant "AppletServer" as server
+participant "Dodai" as dodai
+
+user -> server: POST /push/cert
+alt apns の場合
+server->server: 証明書の検証
+alt 検証失敗
+server --> user: 400 Bad Request
+else 検証成功
+server -> server: 証明書期限を抽出 
+server -> server: 証明書の暗号化 & Baseエンコード
+server -> server: パスワードの暗号化 & Base64エンコード
+server -> dodai: - 暗号化済証明書\n- 暗号化済パスワード\n- 証明書期限\n- vendorId\n- type: apns\nをcertificateコレクションに保存要求
+dodai --> server: 201 O.K.
+server --> user: 201 O.K.
+end
+else fcm の場合
+server -> server: アクセストークンの取得
+alt 取得失敗
+server --> user: 400 Bad Request
+else 取得成功
+server -> dodai: - 秘密鍵\n- vendorId\n- type: fcm\nをcertificateコレクションに保存要求
+dodai --> server: 201 O.K.
+server --> user: 201 O.K.
+end
+end
+@enduml

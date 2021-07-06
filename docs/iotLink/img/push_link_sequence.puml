@@ -1,0 +1,34 @@
+@startuml
+!include style.conf
+title /push/link
+
+participant "SDK" as Sdk
+participant "配信管理サーバ" as PushServer
+participant "ユーザ管理サーバ" as UserServer
+database "notification_token" as TokenTable
+database "private_key" as KeyTable
+participant "FCM" as Firebase
+
+Sdk -> PushServer: POST /push/link
+PushServer -> UserServer: userPreferenceId\nから連携先ユーザリストを取得
+PushServer <-- UserServer:連携先ユーザリスト
+PushServer -> TokenTable: 連携先ユーザのTokenリストを取得
+PushServer <-- TokenTable: 連携先ユーザのTokenンリスト
+group "秘密鍵読み出し機能"
+  PushServer -> KeyTable: appIdから秘密鍵を取得
+  PushServer <-- KeyTable: 秘密鍵
+  PushServer -> PushServer: 秘密鍵復号化&Base64デコード
+end
+alt "秘密鍵取得失敗"
+  Sdk <-- PushServer: 400 Bad Request
+else "秘密鍵取得成功"
+  PushServer -> PushServer: アクセストークンを取得
+  alt "AccessToken取得失敗"
+    Sdk <-- PushServer: 400 Bad Request
+  else "AccessToken取得成功"
+    PushServer -> PushServer: Push通知メッセージ生成（仕様未定）
+    PushServer -> Firebase: 連携Push通知送信
+  end
+end
+
+@enduml

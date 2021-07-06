@@ -1,0 +1,17 @@
+以下の手順でテストできます。
+
+[DB初期化]
+cd AppletServer/assets/mysql
+./startMySQLServer.sh
+cd sql
+./init.sh
+
+[テスト]
+BlockServer起動
+PORT=10011 npm start
+AppletServer起動
+npm run test:config
+npm start
+npm run cookie
+npx mocha --timeout 30000 -r ts-node/register test/api/controllers/*.ts
+npx mocha --timeout 30000 -r ts-node/reigster test/service/*.ts

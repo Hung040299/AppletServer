@@ -1,0 +1,17 @@
+.*.swp
+.idea
+logs
+*.log
+pids
+*.pid
+*.seed
+lib-cov
+coverage
+.grunt
+build/Release
+node_modules
+.lock-wscript
+config/runtime.yaml
+config/development.yaml
+config/production.yaml
+.*.DS_Store

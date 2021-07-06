@@ -1,0 +1,41 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+participant "RiiiverApp" as App
+participant "Blockサーバ" as BlockServer
+
+UserA            -> App           ++: 「選択画面(Top画面)」を表示する
+UserA           <-- App             : Top画面を表示する
+
+group "IoT-iiidea作成機能"
+  UserA            -> App             : 「New iiidea」を押下する
+  note over App
+    ベンダ・デバイス選択画面は
+    表示しないようにする
+  end note
+  UserA           <-- App             : TSA選択画面を表示する
+
+  UserA            -> App             : T, S, Aのいずれかを選択する
+  App              -> App           ++: 検索条件を読み出す
+
+  alt "検索条件が存在するとき"
+    App            -> BlockServer   ++: pieceリストを取得(/block/api/pubBlocks)
+    App           <-- BlockServer   --: pieceリスト
+    UserA         <-- App           --: piece選択画面を表示する
+    |||
+  else "検索条件が存在しないとき"
+    UserA         <-- App             : piece検索条件画面を表示する
+    UserA          -> App             : デバイスを選択する
+    UserA          -> App             : 「OK」を押下する
+    App            -> App             : 検索条件を端末に保存する
+    App            -> BlockServer   ++: pieceリストを取得(/block/api/pubBlocks)
+    App           <-- BlockServer   --: pieceリスト
+    UserA         <-- App             : piece選択画面を表示する
+  end
+end
+
+UserA            -> App             : pieceを押下する
+UserA           <-- App             : piece詳細画面を表示する
+
+@enduml

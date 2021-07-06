@@ -1,0 +1,12 @@
+version: "2"
+services:
+  applet_mysql_jp:
+    image: applet_mysql
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+  applet_mysql_en:
+    image: applet_mysql
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password

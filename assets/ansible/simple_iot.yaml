@@ -1,0 +1,35 @@
+# target is [dev|stg|prod]
+- hosts: "{{target}}"
+  environment:
+    PATH: "/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+  tasks:
+    - name: delete zip
+      become: yes
+      file:
+        path: '{{ item }}'
+        state: absent
+      with_items:
+        - /home/riapps/iot/git/river_applet_server.zip
+        - /home/riapps/iot/git/river_applet_server
+        - /home/riapps/iot/git/river_applet_server-0.0.1.tgz
+        - /home/riapps/iot/git/package
+    - name: send server app
+      become: yes
+      become_user: riapps
+      copy:
+        src: ./river_applet_server.zip
+        dest: /home/riapps/iot/git
+    - name: unzip 
+      become: yes
+      become_user: riapps
+      shell: unzip -o ./river_applet_server.zip
+      args:
+       chdir: /home/riapps/iot/git
+    - name: start server
+      become: yes
+      become_user: riapps
+      shell: bash ./deploy.sh '{{ target }}' 'iot'
+      register: start_result
+      args:
+       chdir: /home/riapps/iot/git/river_applet_server/assets
+    - debug: var=start_result

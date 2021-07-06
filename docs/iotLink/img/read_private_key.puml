@@ -1,0 +1,12 @@
+@startuml
+!include style.conf
+
+participant "配信管理サーバ" as PushServer
+database "private_key" as KeyTable
+
+group "秘密鍵読み出し機能"
+  PushServer -> KeyTable: appIdから秘密鍵を取得
+  PushServer -> PushServer: 秘密鍵復号化&Base64デコード
+end
+
+@enduml

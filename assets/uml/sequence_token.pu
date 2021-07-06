@@ -1,0 +1,13 @@
+@startuml token_sequence
+scale 1.5
+title NotificationToken保存 (POST /push/notificationToken)
+
+participant "User" as user
+participant "AppletServer" as server
+participant "Dodai" as dodai
+
+user -> server: POST /push/notificationToken
+server -> dodai: - vendorId\n- type\n- notificationToken\n- owner\nをnotficationTokenコレクションに保存要求\n
+dodai --> server: 201 O.K.
+server --> user: 201 O.K.
+@enduml

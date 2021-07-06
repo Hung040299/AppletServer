@@ -1,0 +1,42 @@
+@startuml
+!include style.conf
+
+actor "iiideaユーザA" as UserA
+participant "RiiiverPlayer/VendorApp" as PlayerApp
+participant "SDK" as Sdk
+participant "iOS/Android OS" as Os
+participant "ユーザ管理サーバ" as UserServer
+participant "配信管理サーバ" as PushServer
+database "NOTIFICATION_TOKEN" as TokenTable
+
+participant "Firebase(Vendorアカウント)" as Firebase
+
+group "[RiiiverPlayer] NotificationToken取得機能"
+  UserA            -> PlayerApp          ++: 起動する
+  PlayerApp        -> Os                 ++: Push用notificationTokenを取得する
+  Os               -> Firebase           ++: NotificationTokenを取得する
+  Os              <-- Firebase           --: NotificationToken
+  PlayerApp       <-- Os                 --: notificationToken
+end
+
+group "[SDK] NotificationToken送信機能"
+  PlayerApp        -> Sdk                ++: setNotificationToken()
+
+  group "[配信管理サーバ] NotificationToken保存機能"
+    Sdk              -> PushServer       ++: POST /push/notificationToken
+    UserServer       <- PushServer       ++: AuthorizationのユーザIDを取得する
+    UserServer      --> PushServer       --: ユーザID
+    PushServer       -> TokenTable         : notificationTokenを保存する
+    note right TokenTable
+      * ユーザID
+      * アプリID
+      * OS
+      * notificationToken
+    end note
+    Sdk             <-- PushServer       --: 成功
+  end
+
+  PlayerApp       <-- Sdk                --: callback
+end
+
+@enduml

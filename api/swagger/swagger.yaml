@@ -1,0 +1,2305 @@
+swagger: '2.0'
+info:
+  version: 0.0.8
+  title: River_Applet_Server
+  description: |
+    Appletサーバ。
+host: st-app.riiiver.com
+basePath: /api
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  JWTToken:
+    description: |
+      Appから送られるJWTトークン
+    type: apiKey
+    in: header
+    name: Authorization
+paths:
+  /admin/appletSuspend:
+    x-swagger-router-controller: applets
+    put:
+      description: |
+        デバイス停止フラグが操作された時に紐づくappletの[appletSuspend]を一括で更新
+      operationId: putAdminAppletSuspend
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - deviceId
+              - deviceSuspendFlg
+            properties:
+              deviceId:
+                description: deviceの固有のID。
+                type: string
+              deviceSuspendFlg:
+                description: deviceの利用停止フラグ
+                type: boolean
+              deviceSuspendCode:
+                description: deviceの利用停止理由コード
+                type: string
+      responses:
+        '201':
+          description: 変更成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+
+  /applets:
+    x-swagger-router-controller: applets
+    get:
+      description: |
+        Applet一覧を取得する。
+        (Store向けAPI)
+      operationId: listApplets
+      security:
+        - JWTToken: []
+      parameters:
+        - name: appletId
+          in: query
+          description: AppletIDを指定する。(複数指定可能)
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        - name: excludeAppletId
+          in: query
+          description: Exclude applet ID(s) in get applets
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: toolId
+          in: query
+          description: |
+            対象とするToolのIDを完全一致で指定する。
+            レスポンスには、_指定した文字列に完全一致する`toolId`を持つAppletのみ_が含まれる。
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: categoryId
+          in: query
+          description: |
+            対象とするCategoryのIDを完全一致で指定する。
+            レスポンスには、_指定した文字列に完全一致する`categoryId`を持つAppletのみ_が含まれる。
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: deviceId
+          in: query
+          description: |
+            対象とするデバイス種別をIDで指定する。(複数指定可能)
+            レスポンスには、_指定したデバイスで実行可能なAppletのみ_が含まれる。
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_\\.]{2,63}$'
+        - name: vendorId
+          in: query
+          description: |
+            対象とするベンダーをIDで指定する。
+            レスポンスには、_指定したベンダーが開発・管理するAppletのみ_が含まれる。
+          required: false
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,63}$'
+        - name: version
+          in: query
+          description: |
+            Appletのバージョンを指定する。
+            レスポンスには、指定されたバージョン以降のAppletのみが含まれる。
+            Note: 単なる文字列として保持すると比較が不正確となるため、バージョンナンバーは整数値を X.Y.Z の形式で指定するものとする。
+            X、Y、Z は負の整数であってはならず、各数値の先頭に0を配置してはならない。
+            現在は未対応であるが、正確に比較しようとする場合、内部的には`{ major: integer, minor: integer, patch: integer }`として値を保持して整数比較するべき。
+          required: true
+          type: string
+          pattern: '^(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,})$'
+        - name: storeStatus
+          in: query
+          description: |
+            AppletStoreStatusの審査ステータスと一致するものを含む。
+            （主に、申請待ち一覧を取得する際に使用する）
+          required: false
+          type: string
+          enum:
+            - published
+            - waiting_review
+            - rejected
+            - deleted
+        - name: publicStatus
+          in: query
+          description: |
+            AppletPublicStatusの公開ステータスと一致するものを含む。
+          required: false
+          type: boolean
+        - name: ownerId
+          in: query
+          description: |
+            対象とするオーナーをIDで指定する。(複数指定可能)
+            レスポンスには、_指定したオーナーが所持するAppletのみ_が含まれる。
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        - name: title
+          in: query
+          description: |
+            取得対象appletのタイトル(部分一致)
+          type: string
+        - name: lang
+          in: query
+          description: |
+            タイトル検索時の対象言語. titleを指定する場合は必須
+          type: string
+        - name: sortBy
+          in: query
+          description: |
+            likeNum順あるいはDate順に並び替える。
+          type: string
+          enum:
+            - likeNum
+            - releaseDate
+        - name: limit
+          in: query
+          description: データ数を限定する。
+          required: false
+          type: integer
+        - name: osType
+          in: query
+          description: blockが動作する対象スマホOS
+          type: string
+          enum:
+            - iOS
+            - Android
+            - none
+        - name: suspendFlg
+          in: query
+          description: |
+            Applet利用停止状況が一致するものを含む(true：利用停止Applet、false：利用停止されてないApplet)
+          required: false
+          type: boolean
+        - name: personalUseFlg
+          in: query
+          description: |
+            テスト/非公開利用が一致するものを含む(true：テスト/非公開利用のApplet、false：公開されてるApplet)
+          required: false
+          type: boolean
+        - name: sdkVersion
+          in: query
+          required: false
+          description: |
+            sdkVersionが指定されていた場合は、指定された sdkVersion の値と一致している Piece だけを返却する。
+          type: string
+        - name: maxSdkVersion
+          in: query
+          required: false
+          description: | 
+            最大sdkVersionが指定されていた場合は、指定された sdkVersion の値以下の Piece だけを返却する
+          type: string
+        - name: minSdkVersion
+          in: query
+          required: false
+          description: | 
+            最小sdkVersionが指定されていた場合は、指定された sdkVersion の値以上の Piece だけを返却する。
+          type: string
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            properties:
+              applets:
+                description: AppletWholeInfoのリスト
+                type: array
+                items:
+                  $ref: '#/definitions/AppletWholeInfo'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+    post:
+      description: |
+        Appletを登録する。User keyで実行可能。
+        trigger/service/actionの組み合わせについてはサーバサイドでもvalidateする。
+        （注）アプレットを新規作成する際に、postAppletStoreStatusとpostAppletGoodNumも同時に行う。
+      operationId: postApplet
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - toolIds
+              - categoryIds
+              - vendorId
+              - deviceId
+              - iconUrl
+              - title
+              - version
+              - trigger
+              - service
+              - action
+              - public
+              - osType
+              - sdkVersion
+            properties:
+              toolIds:
+                type: array
+                items:
+                  $ref: '#/definitions/ToolId'
+              categoryIds:
+                type: array
+                items:
+                  $ref: '#/definitions/CategoryId'
+              vendorId:
+                $ref: '#/definitions/VendorId'
+              deviceId:
+                $ref: '#/definitions/DeviceTypeId'
+              iconUrl:
+                type: string
+              title:
+                $ref: '#/definitions/I18nObject'
+              version:
+                $ref: '#/definitions/AppletVersion'
+              description:
+                $ref: '#/definitions/I18nObject'
+              #likeNum:
+              #  description: 初期で0を入力する。（AppletGoodNumを作成する？）
+              #  type: integer
+              compatible:
+                $ref: '#/definitions/Compatible'
+              trigger:
+                type: string
+              service:
+                type: string
+              action:
+                type: string
+              wirings:
+                $ref: '#/definitions/AppletWirings'
+              preferences:
+                $ref: '#/definitions/AppletPreferences'
+              permissionList:
+                $ref: '#/definitions/PermissionList'
+              oauthServiceType:
+                description: |
+                  外部APIのoauth認証が必要な場合は入力。(ServiceBlockから持ってくる)
+                type: string
+                enum:
+                  - oauth
+              serviceProxy:
+                $ref: '#/definitions/ServiceProxyData'
+              actionProxy:
+                $ref: '#/definitions/ActionProxyData'
+              public:
+                type: boolean
+              proxies:
+                $ref: '#/definitions/Proxies'
+              templateType:
+                $ref: '#/definitions/TemplateType'
+              triggers:
+                $ref: '#/definitions/Triggers'
+              services:
+                $ref: '#/definitions/Services'
+              actions:
+                $ref: '#/definitions/Actions'
+              osType:
+                $ref: '#/definitions/osType'
+              personalUseFlg:
+                description: テスト/非公開利用の場合true
+                type: boolean
+              sdkVersion: 
+                $ref: '#/definitions/SdkVersion'
+              personalInfoList:
+                $ref: '#/definitions/PersonalInfoList'
+      responses:
+        '201':
+          description: 登録成功
+          schema:
+            $ref: '#/definitions/Applet'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+    put:
+      description: |
+        Appletを変更する。User keyで実行可能。
+        trigger/service/actionの組み合わせについてはサーバサイドでもvalidateする。
+      operationId: putApplet
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+              - title
+              - toolIds
+              - categoryIds
+              - vendorId
+              - deviceId
+              - iconUrl
+              - version
+              - trigger
+              - service
+              - action
+              - public
+              - osType
+            properties:
+              appletId:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              toolIds:
+                type: array
+                items:
+                  $ref: '#/definitions/ToolId'
+              categoryIds:
+                type: array
+                items:
+                  $ref: '#/definitions/CategoryId'
+              vendorId:
+                $ref: '#/definitions/VendorId'
+              deviceId:
+                $ref: '#/definitions/DeviceTypeId'
+              iconUrl:
+                type: string
+              title:
+                $ref: '#/definitions/I18nObject'
+              version:
+                $ref: '#/definitions/AppletVersion'
+              description:
+                $ref: '#/definitions/I18nObject'
+              #likeNum:
+              #  description: （putAppletGoodNumで変更する？）
+              #  type: integer
+              compatible:
+                $ref: '#/definitions/Compatible'
+              trigger:
+                type: string
+              service:
+                type: string
+              action:
+                type: string
+              wirings:
+                $ref: '#/definitions/AppletWirings'
+              preferences:
+                $ref: '#/definitions/AppletPreferences'
+              permissionList:
+                $ref: '#/definitions/PermissionList'
+              oauthServiceType:
+                description: |
+                  外部APIのoauth認証が必要な場合は入力。(ServiceBlockから持ってくる)
+                type: string
+                enum:
+                  - oauth
+              serviceProxy:
+                $ref: '#/definitions/ServiceProxyData'
+              actionProxy:
+                $ref: '#/definitions/ActionProxyData'
+              public:
+                type: boolean
+              proxies:
+                $ref: '#/definitions/Proxies'
+              templateType:
+                $ref: '#/definitions/TemplateType'
+              triggers:
+                $ref: '#/definitions/Triggers'
+              services:
+                $ref: '#/definitions/Services'
+              actions:
+                $ref: '#/definitions/Actions'
+              osType:
+                $ref: '#/definitions/osType'
+      responses:
+        '201':
+          description: 変更成功
+          schema:
+            $ref: '#/definitions/Applet'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+
+  /admin/applets:
+    x-swagger-router-controller: applets
+    get:
+      description: |
+        Applet一覧を取得する。
+        (Store向けAPI)
+      operationId: listAdminApplets
+      parameters:
+        - name: appletId
+          in: query
+          description: AppletIDを指定する。(複数指定可能)
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        - name: excludeAppletId
+          in: query
+          description: Exclude applet ID(s) in get applets
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: toolId
+          in: query
+          description: |
+            対象とするToolのIDを完全一致で指定する。
+            レスポンスには、_指定した文字列に完全一致する`toolId`を持つAppletのみ_が含まれる。
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: categoryId
+          in: query
+          description: |
+            対象とするCategoryのIDを完全一致で指定する。
+            レスポンスには、_指定した文字列に完全一致する`categoryId`を持つAppletのみ_が含まれる。
+          required: false
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+        - name: deviceId
+          in: query
+          description: |
+            対象とするデバイス種別をIDで指定する。(複数指定可能)
+            レスポンスには、_指定したデバイスで実行可能なAppletのみ_が含まれる。
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_\\.]{2,63}$'
+        - name: vendorId
+          in: query
+          description: |
+            対象とするベンダーをIDで指定する。
+            レスポンスには、_指定したベンダーが開発・管理するAppletのみ_が含まれる。
+          required: false
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,63}$'
+        - name: version
+          in: query
+          description: |
+            Appletのバージョンを指定する。
+            レスポンスには、指定されたバージョン以降のAppletのみが含まれる。
+            Note: 単なる文字列として保持すると比較が不正確となるため、バージョンナンバーは整数値を X.Y.Z の形式で指定するものとする。
+            X、Y、Z は負の整数であってはならず、各数値の先頭に0を配置してはならない。
+            現在は未対応であるが、正確に比較しようとする場合、内部的には`{ major: integer, minor: integer, patch: integer }`として値を保持して整数比較するべき。
+          required: true
+          type: string
+          pattern: '^(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,})$'
+        - name: storeStatus
+          in: query
+          description: |
+            AppletStoreStatusの審査ステータスと一致するものを含む。
+            （主に、申請待ち一覧を取得する際に使用する）
+          required: false
+          type: string
+          enum:
+            - published
+            - waiting_review
+            - rejected
+            - deleted
+        - name: publicStatus
+          in: query
+          description: |
+            AppletPublicStatusの公開ステータスと一致するものを含む。
+          required: false
+          type: boolean
+        - name: ownerId
+          in: query
+          description: |
+            対象とするオーナーをIDで指定する。(複数指定可能)
+            レスポンスには、_指定したオーナーが所持するAppletのみ_が含まれる。
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        - name: title
+          in: query
+          description: |
+            Applets title
+          type: string
+        - name: sortBy
+          in: query
+          description: |
+            likeNum順あるいはDate順に並び替える。
+          type: string
+          enum:
+            - likeNum
+            - releaseDate
+        - name: limit
+          in: query
+          description: データ数を限定する。
+          required: false
+          type: integer
+        - name: osType
+          in: query
+          description: blockが動作する対象スマホOS
+          type: string
+          enum:
+            - iOS
+            - Android
+            - none
+        - name: suspendFlg
+          in: query
+          description: |
+            Applet利用停止状況が一致するものを含む(true：利用停止Applet、false：利用停止されてないApplet)
+          required: false
+          type: boolean
+        - name: personalUseFlg
+          in: query
+          description: |
+            テスト/非公開利用が一致するものを含む(true：テスト/非公開利用のApplet、false：公開されてるApplet)
+          required: false
+          type: boolean
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            properties:
+              applets:
+                description: AppletWholeInfoのリスト
+                type: array
+                items:
+                  $ref: '#/definitions/AppletWholeInfo'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  '/applets/{id}':
+    x-swagger-router-controller: applets
+    get:
+      description: |
+        ID指定したAppletを取得する。
+        (SDK向けAPI)
+      operationId: getApplet
+      security:
+        - JWTToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+        - name: deviceId
+          in: query
+          description: |
+            対象とするデバイス種別をIDで指定する。(複数指定可能)
+            レスポンスには、_指定したデバイスで実行可能なAppletのみ_が含まれる。
+          required: false
+          type: array
+          maxItems: 15
+          collectionFormat: csv
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9_\\.]{2,63}$'
+        - name: osType
+          in: query
+          description: blockが動作する対象スマホOS
+          type: string
+          enum:
+            - iOS
+            - Android
+            - none
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/Applet'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+    delete:
+      description: ID指定したAppletを削除する。
+      operationId: deleteApplet
+      security:
+        - JWTToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+      responses:
+        '204':
+          description: 削除成功
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /suspendCreateownapplets:
+    x-swagger-router-controller: applets
+    get:
+      description: |
+        ユーザーが作成したappletのうち利用停止になっているappletを取得する
+      operationId: getSuspendedApplets
+      security:
+        - JWTToken: []
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            properties:
+              AppletSuspend:
+                description: appletSuspendのリスト
+                type: array
+                items:
+                  $ref: '#/definitions/AppletSuspend'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  /createownapplets:
+    x-swagger-router-controller: applets
+    get:
+      description: |
+        UserのApplet一覧を取得する。User keyで実行可能。
+        (AppletBuilder向けAPI)
+      operationId: getMyApplets
+      security:
+        - JWTToken: []
+      parameters:
+        - name: storeStatus
+          in: query
+          description: |
+            AppletStoreStatusの審査ステータスと一致するものを含む。
+            （主に、申請待ち一覧を取得する際に使用する）
+          required: false
+          type: string
+          enum:
+            - published
+            - waiting_review
+            - rejected
+            - deleted
+        - name: publicStatus
+          in: query
+          description: |
+            AppletPublicStatusの公開ステータスと一致するものを含む。
+          required: false
+          type: boolean
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            properties:
+              applets:
+                description: AppletWholeInfoのリスト
+                type: array
+                items:
+                  $ref: '#/definitions/AppletWholeInfo'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  /appletIcon:
+    x-swagger-router-controller: applets
+    post:
+      description: アイコンを登録し、URLを取得する。
+      operationId: postAppletIcon
+      security:
+        - JWTToken: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: appletId
+          in: query
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+        - name: image
+          description: アイコン画像（256x256の正方形のみ可）
+          in: formData
+          required: true
+          type: file
+      responses:
+        '201':
+          description: 登録成功（アイコンのURLを取得する。）
+          schema:
+            type: string
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+    put:
+      description: 指定されたappletのアイコンを変更し、URLを取得する。
+      operationId: putAppletIcon
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: appletId
+          in: query
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+        - name: image
+          description: アイコン画像（256x256の正方形のみ可）
+          in: formData
+          required: true
+          type: file
+      responses:
+        '201':
+          description: 変更成功（アイコンのURLをレスポンスする）
+          schema:
+            type: string
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /appletGoodNum:
+    x-swagger-router-controller: applets
+    get:
+      description: ID指定したAppletのイイネ！の数を取得する。
+      operationId: getAppletGoodNum
+      security:
+        - JWTToken: []
+      parameters:
+        - name: appletId
+          in: query
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/AppletGoodNum'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+    post:
+      description: |
+        ID指定したAppletのAppletGoodNumを作成する。
+        postAppletで呼ぶ想定なので、numは0で作成する。
+      operationId: postAppletGoodNum
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+            properties:
+              appletId:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              num:
+                type: integer
+      responses:
+        '201':
+          description: 登録成功
+          schema:
+            $ref: '#/definitions/AppletGoodNum'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  /appletDownloadNum:
+    x-swagger-router-controller: applets
+    get:
+      description: ID指定したAppletのダウンロード数を取得する。
+      operationId: getAppletDownloadNum
+      security:
+        - JWTToken: []
+      parameters:
+        - name: appletId
+          in: query
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/AppletDownloadNum'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /appletPublicStatus:
+      x-swagger-router-controller: applets
+      get:
+        description: ID指定したAppletのAppletPublicStatusを取得する。
+        operationId: getAppletPublicStatus
+        security:
+          - JWTToken: []
+        parameters:
+          - name: appletId
+            in: query
+            required: true
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        responses:
+          '200':
+            description: 取得成功
+            schema:
+              $ref: '#/definitions/AppletPublicStatus'
+          '401':
+            description: API認証失敗
+            schema:
+              $ref: '#/definitions/Unauthorized'
+          '404':
+            description: 存在しないApplet
+            schema:
+              $ref: '#/definitions/NotFound'
+      post:
+        description: |
+          ID指定したAppletのAppletPublicStatusを作成する。
+          原則、POST /appletの処理内で呼び出すため、意図的に呼び出す必要はない
+        operationId: postAppletPublicStatus
+        security:
+          - JWTToken: []
+        parameters:
+          - name: body
+            in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - appletId
+              properties:
+                appletId:
+                  type: string
+                  pattern: '^[0-9a-f]{24}$'
+                status:
+                  type: boolean
+        responses:
+          '201':
+            description: 登録成功
+            schema:
+              $ref: '#/definitions/AppletPublicStatus'
+          '401':
+            description: API認証失敗
+            schema:
+              $ref: '#/definitions/Unauthorized'
+      put:
+        description: |
+          ID指定したAppletのAppletPublicStatusを変更する。
+          原則、PUT /appletの処理内で呼び出すため、意図的に呼び出す必要はない
+        operationId: putAppletPublicStatus
+        security:
+          - JWTToken: []
+        parameters:
+          - name: body
+            in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - appletId
+                - status
+              properties:
+                appletId:
+                  type: string
+                  pattern: '^[0-9a-f]{24}$'
+                status:
+                  type: boolean
+        responses:
+          '201':
+            description: 変更成功
+            schema:
+              $ref: '#/definitions/AppletPublicStatus'
+          '401':
+            description: API認証失敗
+            schema:
+              $ref: '#/definitions/Unauthorized'
+          '404':
+            description: 存在しないApplet
+            schema:
+              $ref: '#/definitions/NotFound'
+  /admin/appletPersonalUseFlg:
+    x-swagger-router-controller: applets
+    put:
+      description: |
+        ID指定したAppletのpersonalUseFlgを変更する。
+      operationId: putAdminPersonalUseFlg
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+              - personalUseFlg
+            properties:
+              appletId:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              personalUseFlg:
+                type: boolean
+      responses:
+        '201':
+          description: 変更成功
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /appletStoreStatus:
+    x-swagger-router-controller: applets
+    get:
+      description: ID指定したAppletの審査ステータスを取得する。
+      operationId: getAppletStoreStatus
+      parameters:
+        - name: appletId
+          in: query
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/AppletStoreStatus'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+    post:
+      description: |
+        ID指定したAppletの審査ステータスを作成する。
+        postAppletで呼ぶ想定。
+      operationId: postAppletStoreStatus
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+              - status
+            properties:
+              appletId:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              status:
+                type: string
+                enum:
+                  - published
+                  - waiting_review
+                  - rejected
+                  - deleted
+              message:
+                type: string
+      responses:
+        '201':
+          description: 登録成功
+          schema:
+            $ref: '#/definitions/AppletStoreStatus'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+    put:
+      description: ID指定したAppletの審査ステータスを変更する。
+      operationId: putAppletStoreStatus
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+              - status
+            properties:
+              appletId:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              status:
+                type: string
+                enum:
+                  - published
+                  - waiting_review
+                  - rejected
+                  - deleted
+              message:
+                type: string
+      responses:
+        '201':
+          description: 変更成功
+          schema:
+            $ref: '#/definitions/AppletStoreStatus'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /templates:
+    x-swagger-router-controller: templates
+    get:
+      description: |
+        テンプレート一覧を取得する
+        security modelは要検討。
+      operationId: listTemplates
+      security:
+        - JWTToken: []
+      parameters:
+        - name: templateId
+          description: AppletテンプレートID
+          in: query
+          type: array
+          items:
+            type: string
+            pattern: '^[0-9a-f]{24}$'
+        - name: templateType
+          description: Appletテンプレートタイプ
+          in: query
+          type: array
+          items:
+            type: string
+            enum:
+              - serviceParallel
+              - serviceSerial
+              - serviceExclusive
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            properties:
+              appletTemplate:
+                type: array
+                items:
+                  $ref: '#/definitions/AppletTemplate'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないAppletテンプレート
+          schema:
+            $ref: '#/definitions/NotFound'
+    post:
+      description: |
+        テンプレートを登録する
+        security modelは要検討。
+      operationId: registTemplate
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                $ref: '#/definitions/I18nObject'
+              description:
+                $ref: '#/definitions/I18nObject'
+              templateType:
+                type: string
+                enum:
+                  - serviceParallel
+                  - serviceSerial
+                  - serviceExclusive
+              triggers:
+                type: integer
+                minimum: 1
+              services:
+                type: integer
+                minimum: 1
+              actions:
+                type: integer
+                minimum: 1
+              input:
+                $ref: '#/definitions/TemplateInputRequired'
+              output:
+                $ref: '#/definitions/TemplateOutputRequired'
+              wirings:
+                $ref: '#/definitions/AppletWirings'
+              templatePreferences:
+                $ref: '#/definitions/AppletPreferences'
+      responses:
+        '201':
+          description: 登録成功
+          schema:
+            $ref: '#/definitions/AppletTemplate'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+    put:
+      description: |
+        Appletテンプレートを更新する。
+        security modelは要検討。
+      operationId: putTemplate
+      security:
+        - JWTToken: []
+      parameters:
+        - name: template
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - id
+              - name
+              - templateType
+              - triggers
+              - services
+              - actions
+              - wirings
+            properties:
+              id:
+                type: string
+                pattern: '^[0-9a-f]{24}$'
+              name:
+                $ref: '#/definitions/I18nObject'
+              description:
+                $ref: '#/definitions/I18nObject'
+              templateType:
+                type: string
+                enum:
+                  - serviceParallel
+                  - serviceSerial
+                  - serviceExclusive
+              triggers:
+                type: integer
+                minimum: 1
+              services:
+                type: integer
+                minimum: 1
+              actions:
+                type: integer
+                minimum: 1
+              input:
+                $ref: '#/definitions/TemplateInputRequired'
+              output:
+                $ref: '#/definitions/TemplateOutputRequired'
+              wirings:
+                $ref: '#/definitions/AppletWirings'
+              templatePreferences:
+                $ref: '#/definitions/AppletPreferences'
+      responses:
+        '200':
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/AppletTemplate'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないAppletテンプレート
+          schema:
+            $ref: '#/definitions/NotFound'
+  /templates/{id}:
+    x-swagger-router-controller: templates
+    get:
+      operationId: getTemplate
+      security:
+        - JWTToken: []
+      description: |
+        ID指定したAppletテンプレートを取得する。
+        security modelは要検討。
+      parameters:
+        - name: id
+          in: path
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+          required: true
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/AppletTemplate'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないAppletテンプレート
+          schema:
+            $ref: '#/definitions/NotFound'
+    delete:
+      operationId: deleteTemplate
+      security:
+        - JWTToken: []
+      description: |
+        ID指定したAppletテンプレートを削除する
+        security modelは要検討。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+      responses:
+        '204':
+          description: 削除成功
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /push/notificationToken:
+    x-swagger-router-controller: push
+    post:
+      description: プッシュ通知のNotification Tokenの登録を行う.
+      operationId: registerNotificationToken
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - notificationToken
+              - appId
+              - osType
+            properties:
+              notificationToken:
+                type: string
+              appId:
+                type: string
+              osType:
+                $ref: '#/definitions/osType'
+      responses:
+        '201':
+          description: 登録成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  /push/acceptance:
+    x-swagger-router-controller: push
+    post:
+      description: |
+        連携先ユーザのデバイスにpush通知を送る
+        一回連携できるユーザは１人のみ
+      operationId: sendAcceptancePush
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - type
+              - ownerUserId
+              - userId
+              - appId
+              - appletId
+              - user_preference_id
+            properties:
+              type:
+                type: string
+                enum:
+                  - link
+                  - unlink
+                description: link, unlinkのいずれかを指定する。必須項目。
+              ownerUserId:
+                type: string
+                description: 連携元ユーザID
+              userId:
+                type: string
+                description: 連携先ユーザID
+              appId:
+                type: string
+              appletId:
+                type: string
+              blockId:
+                type: string
+              user_preference_id:
+                type: string
+                description: PreferenceID
+              message:
+                type: string
+                description: ★ここのmessageフィールドを追加する
+      responses:
+        '201':
+          description: 送信要求成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /push/link:
+    x-swagger-router-controller: push
+    post:
+      description: piece 実行結果を連携先ユーザのデバイスにpush通知を送る
+      operationId: sendLinkPush
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appletId
+              - userPreferenceId
+              - nextBlockId
+              - nextInput
+            properties:
+              appletId:
+                type: string
+              userPreferenceId:
+                type: string
+              nextBlockId:
+                type: string
+                description: 次に実行されるblockId
+              nextInput:
+                type: object
+                description: 前のblock実行結果（次のblockのinputになる）
+      responses:
+        '201':
+          description: 送信要求成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+  /push/privateKey:
+    x-swagger-router-controller: push
+    post:
+      description: FCM 用の秘密鍵を登録・更新する
+      operationId: postPrivateKey
+      security:
+        - JWTToken: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - appId
+              - vendorId
+              - firebaseProjectId
+              - firebasePrivateKey
+            properties:
+              appId:
+                type: string
+              vendorId:
+                $ref: '#/definitions/VendorId'
+              firebaseProjectId:
+                type: string
+              firebasePrivateKey:
+                type: object
+                description: Firebase コンソールから取得した秘密鍵
+      responses:
+        '201':
+          description: 登録成功
+          schema:
+            type: string
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /appletCopy:
+    x-swagger-router-controller: applets
+    get:
+      operationId: getAppletCopy
+      security:
+        - JWTToken: []
+      description: |
+        Appletの複製を検索する
+      parameters:
+        - name: userPreferenceId
+          in: query
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+          required: true
+      responses:
+        '200':
+          description: 取得成功
+          schema:
+            $ref: '#/definitions/AppletCopyResult'
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないAppletテンプレート
+          schema:
+            $ref: '#/definitions/NotFound'
+    post:
+      description: |
+        Appletの複製を作成する
+      operationId: postAppletCopy
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - appletId
+              - userId
+              - userPreferenceId
+            properties:
+              appletId:
+                description: Copyするオリジナルのapplet_id
+                type: string
+              userId:
+                description: Copy先のUserのID
+                type: string
+              userPreferenceId:
+                description: 紐付けるプリファレンスのID
+                type: string
+      responses:
+        '201':
+          description: 作成成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないApplet
+          schema:
+            $ref: '#/definitions/NotFound'
+  /appletCopy/{applet_copy_id}:
+    x-swagger-router-controller: applets
+    delete:
+      description: |
+        アプレットの複製を削除する
+      operationId: deleteAppletCopy
+      parameters:
+        - name: applet_copy_id
+          in: path
+          type: string
+          pattern: '^[0-9a-f]{24}$'
+          required: true
+      responses:
+        '204':
+          description: 削除成功
+        '400':
+          description: パラメータ不正
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '401':
+          description: API認証失敗
+          schema:
+            $ref: '#/definitions/Unauthorized'
+        '404':
+          description: 存在しないAppletCopy
+          schema:
+            $ref: '#/definitions/NotFound'
+definitions:
+  I18nObject:
+    description: 言語毎の文言を指定できるオブジェクト。
+    type: object
+    additionalProperties:
+      type: string
+    example:
+      ja: アプレットA
+      en: Applet
+  Applet:
+    description: |
+      Appletオブジェクト。Blockの組み合わせを記述する。ユーザは自由にAppletを作成できる。
+      商用でどういうデータ構造になるかはまだ検討が必要だが、プロトタイプではtrigger/service/actionの3段階構成で、
+      それぞれBlockのIDを記述して組み合わせる。
+    type: object
+    required:
+      - id
+      - title
+      - toolIds
+      - categoryIds
+      - vendorId
+      - deviceId
+      - iconUrl
+      - version
+      - trigger
+      - service
+      - action
+      - osType
+    properties:
+      id:
+        description: Appletに固有のID。サーバが生成する。
+        type: string
+      title:
+        #description: Appletの名前。ストアで公開しない場合は、作成ユーザ自身のロケールの値だけでもよい。
+        $ref: '#/definitions/I18nObject'
+      description:
+        #description: Appletの説明。ストアで公開しない場合は、作成ユーザ自身のロケールの値だけでもよい。
+        $ref: '#/definitions/I18nObject'
+      toolIds:
+        type: array
+        items:
+          $ref: '#/definitions/ToolId'
+      categoryIds:
+        type: array
+        items:
+          $ref: '#/definitions/CategoryId'
+      vendorId:
+        $ref: '#/definitions/VendorId'
+      deviceId:
+        $ref: '#/definitions/DeviceTypeId'
+      iconUrl:
+        description: アイコンのURL
+        type: string
+      version:
+        $ref: '#/definitions/AppletVersion'
+      trigger:
+        description: Trigger BlockのID。
+        type: string
+      service:
+        description: Service BlockのID。
+        type: string
+      action:
+        description: Action BlockのID。
+        type: string
+      wirings:
+        $ref: '#/definitions/AppletWirings'
+      preferences:
+        $ref: '#/definitions/AppletPreferences'
+      permissionList:
+        $ref: '#/definitions/PermissionList'
+      oauthServiceType:
+        description: |
+          外部APIのoauth認証が必要な場合は入力。(ServiceBlockから持ってくる)
+        type: string
+        enum:
+          - oauth
+      serviceProxy:
+        $ref: '#/definitions/ServiceProxyData'
+      actionProxy:
+        $ref: '#/definitions/ActionProxyData'
+      proxies:
+        $ref: '#/definitions/Proxies'
+      isDeleted:
+        description: 削除扱いにする場合、trueにする。
+        type: boolean
+      templateType:
+        $ref: '#/definitions/TemplateType'
+      triggers:
+        $ref: '#/definitions/Triggers'
+      services:
+        $ref: '#/definitions/Services'
+      actions:
+        $ref: '#/definitions/Actions'
+      osType:
+        $ref: '#/definitions/osType'
+      AppletSuspend:
+        $ref: '#/definitions/AppletSuspend'
+      personalUseFlg:
+        description: テスト/非公開利用の場合true。
+        type: boolean
+    example:
+      title: MyWeatherApplet
+      description: >
+        天気AppletのJSON表現例。時計のボタンを押すと現在地の1時間後の天気を取得し、時計の針で表現する、といった機能をイメージ。
+        ここでは例として以下を仮定:
+        1.
+        `trigger`となるボタンBlockは特に`output`を持たない。「押された」という事実をもって単に`service`ブロックが起動される。
+        2.
+        天気予報サービスのBlockは現在地の取得機能を含み、`input`を必要としない。また、`rainfall`という数値`output`を持つ。
+        3.
+        針動作のBlockは「どの針を動かすか」という`preferences`項目と、どれくらい動かすか(`amount`)という数値`input`を持つ。
+        4. Block間の数値入出力は、程よく対応範囲に収まっているものとする。
+      trigger: WatchButtonPushBlockID
+      service: WeatherServiceBlockID
+      action: WatchClockHandBlockID
+      wirings:
+        WatchClockHandBlockID:
+          amount:
+            id: WeatherServiceBlockID
+            property: rainfall
+      preferences:
+        WatchClockHandBlockID:
+          handType: seconds
+      public: false
+  AppletInfo:
+    description: |
+      Appletそのものとは別のAppletに関する情報
+    type: object
+    required:
+      - id
+      - ownerId
+      - likeNum
+      - downloadNum
+      - publicStatus
+      - storeStatus
+      - submitDate
+    properties:
+      id:
+        description: Appletに固有のID。サーバが生成する。
+        type: string
+      ownerId:
+        description: オーナー
+        type: string
+      likeNum:
+        type: integer
+      downloadNum:
+        type: integer
+      publicStatus:
+        type: boolean
+      storeStatus:
+        type: string
+        enum:
+         - published
+         - waiting_review
+         - rejected
+      release:
+        type: string
+        format: "date-time"
+      compatible:
+        type: array
+        items:
+          type: object
+          properties:
+            vendor:
+              type: string
+              example: CITIZEN
+            models:
+              type: array
+              items:
+                type: string
+      submitDate:
+        description: "データ生成時刻(UTC)"
+        format: "date-time"
+        type: string
+  AppletWholeInfo:
+    description: |
+      AppletとAppletInfoをまとめたもの。
+    type: object
+    required:
+      - id
+      - applet
+      - appletInfo
+    properties:
+      id:
+        description: Appletに固有のID。サーバが生成する。
+        type: string
+      applet:
+        $ref: '#/definitions/Applet'
+      appletInfo:
+        $ref: '#/definitions/AppletInfo'
+  AppletWirings:
+    description: >
+      Block間の`input`/`output`をどのように結びつけるか定めた辞書オブジェクト。結線規則。
+      keyは`input`を受け取る側のBlockのID、valueは`object`。Valueの`object`はBlockの`input`に含まれる`properties`をkey、
+      AppletWiringSourceオブジェクトをvalueとする。
+      あるBlockの`output`の一部または全部を不要な場合に読み捨てることはAppletの実行上問題を来さないが、
+      **`input`に不足がある場合はAppletの実行が不可能になる**ことから、`input`が全て充足していることがAppletの成立条件であり、従ってWiringでも`input`を起点として記述する。
+      省略される可能性もあることに注意する。例えば、`default`値をもっている`input` propertyに関する規則や、
+      `input`に有効なpropertyを持たないBlockに関する規則などは省略可能である。
+      このオブジェクトはApplet作成者がApplet作成アプリ上で編集した内容をJSONとして表現したものになる。
+      今後の検討課題として、値の暗黙的な変換規則の整備や、明示的な変換・編集などを記述できるようにするかどうか、
+      といった点が上がっている。が、プロトタイプの間は`type`の一致を検証する程度で、Blockの実装側で値の形式は既知として進める予定。
+    example:
+      ServiceBlockID:
+        booleanInput:
+          id: TriggerBlockID
+          property: booleanOutput
+      ActionBlockID:
+        stringInput:
+          id: ServiceBlockID
+          property: stringOutput
+        numberInputA:
+          id: ServiceBlockID
+          property: numberOutput2
+        numberInputB:
+          id: ServiceBlockID
+          property: numberOutput1
+    type: object
+    default: {}
+    additionalProperties:
+      type: object
+      additionalProperties:
+        $ref: '#/definitions/AppletWiringSource'
+  AppletWiringSource:
+    description: AppletWiringsオブジェクトのleafとなるオブジェクト。`input`に入力するための値を出力する元となる`output`を指定する。
+    example:
+      id: SourceBlockID
+      property: sourceOutputPropertyName
+    required:
+      - id
+      - property
+    type: object
+    properties:
+      id:
+        description: BlockのID。
+        type: string
+      property:
+        description: |
+          値の出力元となる、Blockの`output`に含まれるproperty名。
+          プロトタイプでは、入力対象である`input` propertyとは`type`が一致しなければならない。（暗黙の型変換などは規定しない）
+        type: string
+  AppletPreferences:
+    description: >
+      各Blockのpreferencesに具体的な値を設定した辞書オブジェクト。
+      keyはBlockのID、valueは`object`。Valueの`object`は、Blockの`preferences`に含まれる`properties`をkey、設定値をvalueとする。
+      ストアの存在とAppletの共有を前提とする環境下では、ここで定める値はApplet作成者の決めたデフォルト値という扱いで、
+      Applet使用者は一部または全部の値を自分でカスタマイズしても良い。
+      カスタマイズした場合、ユーザ個別のpreferencesは別リソースとなる見込みだが、プロトタイプではユーザ端末上のアプリ内のローカルな状態で構わない。
+    example:
+      TriggerBlockID:
+        stringProperty: default value
+        numberProperty: 10
+      ServiceBlockID:
+        booleanProperty: true
+      ActionBlockID: {}
+    type: object
+    default: {}
+    additionalProperties:
+      type: object
+  PermissionList:
+    description: |
+      Applet実行時に必要となるクライアントOSのパーミッションリスト
+      Appletに含まれるBlockのパーミッションリストを結合したもの
+      iOSとAndroidでパーミッションが必要となるものに差異があるため、各クライアントOS毎に定義している
+    type: object
+    properties:
+      ios:
+        type: array
+        items:
+          type: string
+          enum:
+            - location
+            - mediaLibrary
+      android:
+        type: array
+        items:
+          type: string
+          enum:
+            - location
+            - mediaStore
+  AppletGoodNum:
+    description: |
+      Appletのイイネ！の総数
+    type: object
+    properties:
+      num:
+        description: idのAppletのイイネ！の総数
+        type: integer
+  AppletDownloadNum:
+    description: |
+      Appletのダウンロード数
+    type: object
+    properties:
+      appletId:
+        description: Appletの固有のID。
+        type: string
+        pattern: '^[0-9a-f]{24}$'
+      num:
+        description: idのAppletのダウンロード数
+        type: integer
+  AppletPublicStatus:
+    description: |
+      Appletの一般公開・限定公開の設定(Applet作成者が決める)
+    type: object
+    properties:
+      status:
+        description: idのAppletの一般公開・限定公開(true：一般公開、false：限定公開)
+        type: boolean
+  AppletStoreStatus:
+    description: |
+      Appletの申請状態の管理
+    type: object
+    properties:
+      status:
+        description: |
+          Aplletのステータス
+          "published"->審査OK
+          "waiting_review"->審査待ち
+          "rejected"->審査NG
+          "deleted"->削除済み
+        type: string
+        enum:
+         - published
+         - waiting_review
+         - rejected
+         - deleted
+      message:
+        description: 審査でリジェクトされた場合のメッセージ
+        type: string
+      release:
+        description: "データ生成時刻(UTC)"
+        format: "date-time"
+        type: string
+  ToolId:
+    description: |
+      ToolのIDとして用いられる。
+    type: string
+    pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+    example: schedule
+  CategoryId:
+    description: |
+      CategoryのIDとして用いられる。
+    type: string
+    pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+    example: schedule
+  VendorId:
+    description: |
+      VendorのIDとして用いられる。
+    type: string
+    pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,63}$'
+    example: yahoo
+  DeviceTypeId:
+    description: |
+      DeviceTypeのIDとして用いられる。
+    type: string
+    pattern: '^[A-Za-z0-9][A-Za-z0-9_\\.]{2,63}$'
+    example: iOS
+  AppletVersion:
+    description: |
+      Appletのバージョン。
+      バージョンナンバーは X.Y.Z の形式で記述するものとする。
+      X、Y、Z は負でない整数値でなくてはならず、各数値の先頭に0を配置してはならない。
+    type: string
+  Compatible:
+    type: array
+    items:
+      type: object
+      properties:
+        vendor:
+          type: string
+          example: CITIZEN
+        models:
+          type: array
+          items:
+            type: string
+  BadRequest:
+    description: |
+      400 Bad Requestとともに返却されるエラーオブジェクト。
+      API仕様に定めたJSON schemaにマッチしなかった場合などにこのエラーとなる。
+      エラー内容は現状では正規化されてはいないが、正規化する場合はDodaiのエラーレスポンス形式に合わせる。
+  Unauthorized:
+    description: |
+      401 Unauthorizedとともに返却されるエラーオブジェクト。
+      その他、Dodaiからエラーレスポンスが帰ってきた場合も該当する。
+      エラー内容は現状では正規化されてはいないが、正規化する場合はDodaiのエラーレスポンス形式に合わせる。
+  NotFound:
+    description: |
+      404 Not Foundとともに返却されるエラーオブジェクト。
+      指定されたリソースが存在しなかった場合にこのエラーとなる。
+  AppletTemplate:
+    type: object
+    description: Appletテンプレートを規定するオブジェクト
+    required:
+      - name
+      - templateType
+      - triggers
+      - services
+      - actions
+    properties:
+      id:
+        description: |
+          AppletテンプレートのID
+          システム自動採番
+        type: string
+        pattern: '^[A-Za-z0-9][A-Za-z0-9_]{2,31}$'
+      name:
+        description: |
+          Appletテンプレートの名称
+        $ref: '#/definitions/I18nObject'
+      description:
+        description: |
+          Appletテンプレートの説明
+        $ref: '#/definitions/I18nObject'
+      templateType:
+        $ref: '#/definitions/TemplateType'
+      triggers:
+        description: |
+          このAppletテンプレートに設定できるTrigger Blockの個数
+        type: integer
+        minimum: 1
+      services:
+        description: |
+          このAppletテンプレートに設定できるService Blockの個数
+        type: integer
+        minimum: 1
+      actions:
+        description: |
+          このAppletテンプレートに設定できるAction Blockの個数
+        type: integer
+        minimum: 1
+      input:
+        description: |
+          このAppletテンプレートに設定できる各Blockのinput type定義
+        $ref: '#/definitions/TemplateInputRequired'
+      output:
+        description: |
+          このAppletテンプレートに設定できる各Blockのoutput type定義
+        $ref: '#/definitions/TemplateOutputRequired'
+      wirings:
+        description: |
+          このAppletテンプレートでのWiring定義
+          実際にAppletを作るときには、このWiring定義が優先される
+        $ref: '#/definitions/AppletWirings'
+      templatePreference:
+        description: |
+          このAppletテンプレートでのPreference定義
+        $ref: '#/definitions/AppletPreferences'
+  TemplateOutputRequired:
+    type: object
+    properties:
+      trigger:
+        type: string
+        description: テンプレートで利用できるtrigger Blockに要求するoutputの型を定義する
+      service:
+        type: string
+        description: テンプレートで利用できるservcie Blockに要求するoutputの型を定義する
+  TemplateInputRequired:
+    type: object
+    properties:
+      service:
+        type: string
+        description: テンプレートで利用できるservcie Blockに要求するinputの型を定義する
+      action:
+        type: string
+        description: テンプレートで利用できるaction Blockに要求するinputの型を定義する
+  Proxies:
+    description: |
+      外部APIで必要となる情報を入力
+    type: object
+    additionalProperties:
+      $ref: '#/definitions/ServiceProxyData'
+    example:
+      blockId:
+        service: proxyCoreName
+        parameters:
+          - location
+        authType:
+          - oauth2
+  ServiceProxyData:
+    type: object
+    description: |
+      ServiceProxyの情報。
+    properties:
+      service:
+        type: string
+        description: Blockで使用するServiceProxyCoreの名前。
+      parameters:
+        type: array
+        description: BlockCoreがOSから取得するデータのパラメータリスト。
+        items:
+          type: string
+          enum:
+            - location
+            - location_accurate
+            - location_normal
+            - location_rough
+      authType:
+        $ref: '#/definitions/AuthType'
+  ActionProxyData:
+    type: object
+    description: |
+      ActionProxyの情報。
+    properties:
+      service:
+        type: string
+        description: Blockで使用するActionProxyCoreの名前。
+      parameters:
+        type: array
+        description: BlockCoreがOSから取得するデータのパラメータリスト。
+        items:
+          type: string
+          enum:
+            - location
+      authType:
+        $ref: '#/definitions/AuthType'
+  AuthType:
+    description: |
+      認証タイプ。
+      認証なしの場合はこのパラメータはセットされない。
+    type: array
+    items:
+      type: string
+      enum:
+        - apiKey
+        - oauth2
+        - other
+  TemplateType:
+    description: |
+      Appletテンプレートの種類
+      BlockTypeがおなじものをどう実行するかの定義
+    type: string
+    enum:
+      - serviceParallel
+      - serviceSerial
+      - serviceExclusive
+  Triggers:
+    description: |
+      Appletテンプレート利用時の2つ目以降のTrigger Block IDの列
+      1つ目のTrigger Blockは"trigger"に指定されたものとし、2つ目以降をこの配列に格納
+      処理の優先順位がある場合、"trigger"に記載されたもの→配列に記載されたBlockの先頭から末尾の順となる
+    type: array
+    items:
+      type: string
+  Services:
+    description: |
+      Appletテンプレート利用時の2つ目以降のService Block IDの列
+      1つ目のTrigger Blockは"service"に指定されたものとし、2つ目以降をこの配列に格納
+      処理の優先順位がある場合、"service"に記載されたもの→配列に記載されたBlockの先頭から末尾の順となる
+    type: array
+    items:
+      type: string
+  Actions:
+    description: |
+      Appletテンプレート利用時の2つ目以降のAction Block IDの列
+      1つ目のTrigger Blockは"action"に指定されたものとし、2つ目以降をこの配列に格納
+      処理の優先順位がある場合、"action"に記載されたもの→配列に記載されたBlockの先頭から末尾の順となる
+    type: array
+    items:
+      type: string
+  osType:
+    description: blockが動作する対象スマホOS
+    type: string
+    enum:
+      - iOS
+      - Android
+      - none
+  blockSuspend:
+    description: blockの利用停止情報
+    type: object
+    properties:
+      blockId:
+        description: Blockの固有のID。
+        type: string
+      blockSuspendFlg:
+        description: Blockの利用停止フラグ
+        type: boolean
+      blockSuspendCode:
+        description: Blockの利用停止理由コード
+        type: string
+  AppletSuspend:
+    description: |
+      Appletの利用停止情報。
+      device/trigger/service/actionいずれかのSuspendFlgがtrueの場合、利用停止。
+    type: object
+    properties:
+      id:
+        description: Appletに固有のID。サーバが生成する。
+        type: string
+      device:
+        $ref: '#/definitions/deviceSuspend'
+      trigger:
+        $ref: '#/definitions/blockSuspend'
+      service:
+        $ref: '#/definitions/blockSuspend'
+      action:
+        $ref: '#/definitions/blockSuspend'
+  deviceSuspend:
+    description: deviceの利用停止情報
+    type: object
+    properties:
+      deviceId:
+        description: deviceの固有のID。
+        type: string
+      deviceSuspendFlg:
+        description: deviceの利用停止フラグ
+        type: boolean
+      deviceSuspendCode:
+        description: deviceの利用停止理由コード
+        type: string
+  AppletCopyResult:
+    description: Appletの複製
+    type: object
+    properties:
+      applet_copy_id:
+        description: Appletの複製ID。
+        type: string
+  SdkVersion: 
+    description: SdkVersion
+    type: string
+    pattern: '^(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,}).(\d{1}|[1-9]{1}\d{1,})$'
+    example: 1.0.0
+  PersonalInfoList:
+    description: |
+      
+    type: array
+    items: 
+      type: object
+      required:
+        - serviceCompanyName
+        - privacyPolicy
+        - description
+        - typeList
+      properties:
+        serviceCompanyName:
+          type: string
+        privacyPolicy:
+          type: object
+        description: 
+          type: object
+        typeList: 
+          type: array
+          items:
+            type: object
+            required:
+              - type
+              - description
+            properties:
+              type:
+                type: string
+                enum: 
+                  - vital
+                  - location
+                  - demographic
+                  - userLog
+                  - diagnose
+                  - id
+              description: 
+                type: object

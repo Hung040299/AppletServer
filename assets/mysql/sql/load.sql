@@ -1,0 +1,12 @@
+truncate CATEGORY;
+truncate DEVICE;
+truncate TOOL;
+truncate VENDOR_LOGIN;
+truncate VENDOR;
+truncate APP;
+source CATEGORY.sql
+source DEVICE.sql
+source TOOL.sql
+source USER_VENDOR_LOGIN.sql
+source VENDOR.sql
+source APP.sql

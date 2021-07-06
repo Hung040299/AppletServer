@@ -1,0 +1,114 @@
+# target is [dev|stg|prod]
+- hosts: "{{target}}"
+  environment:
+    PATH: "/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+  tasks:
+    # - name: which command install
+    #   become: true
+    #   yum:
+    #     name: which
+    #     state: installed
+    # - name: installing latest version of curl
+    #   become: yes
+    #   yum:
+    #     name: curl
+    #     state: installed
+    # - name: setup nodejs9.x
+    #   become: yes
+    #   shell: curl -sL https://rpm.nodesource.com/setup_9.x | bash -
+    # - name: installing latest version of node.js
+    #   become: yes
+    #   yum:
+    #     name: nodejs-9.3.0
+    #     state: installed
+    # - name: Ensure pm2 (process monitoring tool)
+    #   become: true
+    #   npm:
+    #     name: pm2
+    #     global: yes
+    #     state: present
+    # - name: Ensure nginx yum repository
+    #   # See https://nginx.org/en/linux_packages.html#stable
+    #   become: true
+    #   copy:
+    #     content: |
+    #       [nginx]
+    #       name=nginx repo
+    #       baseurl=http://nginx.org/packages/centos/7/$basearch/
+    #       gpgcheck=0
+    #       enabled=1
+    #     dest: /etc/yum.repos.d/nginx.repo
+    # - name: install Nginx
+    #   become: yes
+    #   yum:
+    #     name: nginx
+    #     state: installed
+    # - name: nginxのサービススタート
+    #   become: yes
+    #   systemd:  
+    #     name: nginx
+    #     enabled: yes
+    # - name: delete zip
+    #   become: yes
+    #   file:
+    #     path: '{{ item }}'
+    #     state: absent
+    #   with_items:
+    #     - /tmp/river_applet_server
+    #     - /tmp/river_applet_server.zip
+    # - name: send server app
+    #   become: yes
+    #   copy:
+    #     src: ./river_applet_server.zip
+    #     dest: /tmp/
+    # - name: unzip 
+    #   become: yes
+    #   unarchive: 
+    #     src: /tmp/river_applet_server.zip
+    #     dest: /tmp/
+    #     remote_src: yes
+    # - name: start server
+    #   become: yes
+    #   shell: bash ./deploy.sh dev
+    #   register: start_result
+    #   args:
+    #     chdir: /tmp/river_applet_server/assets
+    # - debug: var=start_result
+    - name: delete zip
+      become: yes
+      file:
+        path: '{{ item }}'
+        state: absent
+      with_items:
+        - /home/riapps/git/river_applet_server.zip
+        - /home/riapps/git/river_applet_server
+        - /home/riapps/git/river_applet_server-0.0.1.tgz
+        - /home/riapps/git/package
+    - name: send server app
+      become: yes
+      become_user: riapps
+      copy:
+        src: ./river_applet_server.zip
+        dest: /home/riapps/git
+    - name: unzip 
+      become: yes
+      become_user: riapps
+      shell: unzip -o ./river_applet_server.zip
+      args:
+       chdir: /home/riapps/git
+    - name: start server
+      become: yes
+      become_user: riapps
+      shell: bash ./deploy.sh '{{ target }}'
+      register: start_result
+      args:
+       chdir: /home/riapps/git/river_applet_server/assets
+    - debug: var=start_result
+
+
+    
+    
+ 
+      
+ 
+    
